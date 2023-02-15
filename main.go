@@ -18,9 +18,12 @@ package main
 
 import (
 	"flag"
+	"os"
+	"time"
+
 	buildv1 "github.com/openshift/api/build/v1"
 	imagev1 "github.com/openshift/api/image/v1"
-	"os"
+	"go.uber.org/zap/zapcore"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -64,6 +67,7 @@ func main() {
 			"Enabling this will ensure there is only one active controller manager.")
 	opts := zap.Options{
 		Development: true,
+		TimeEncoder: zapcore.TimeEncoderOfLayout(time.RFC3339),
 	}
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
@@ -84,9 +88,10 @@ func main() {
 	}
 
 	if err = (&controllers.DSPipelineReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-		Log:    ctrl.Log,
+		Client:        mgr.GetClient(),
+		Scheme:        mgr.GetScheme(),
+		Log:           ctrl.Log,
+		TemplatesPath: "config/internal/",
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DSPipelineParams")
 		os.Exit(1)
