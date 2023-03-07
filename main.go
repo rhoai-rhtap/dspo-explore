@@ -18,23 +18,27 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	"github.com/golang/glog"
+	"github.com/opendatahub-io/data-science-pipelines-operator/controllers/config"
+	"github.com/spf13/viper"
 	"os"
+	"strings"
 	"time"
 
+	"github.com/fsnotify/fsnotify"
+	dspav1alpha1 "github.com/opendatahub-io/data-science-pipelines-operator/api/v1alpha1"
+	"github.com/opendatahub-io/data-science-pipelines-operator/controllers"
 	buildv1 "github.com/openshift/api/build/v1"
 	imagev1 "github.com/openshift/api/image/v1"
-	"go.uber.org/zap/zapcore"
-
-	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
-	// to ensure that exec-entrypoint and run can make use of them.
-	_ "k8s.io/client-go/plugin/pkg/client/auth"
-
-	dspipelinesiov1alpha1 "github.com/opendatahub-io/data-science-pipelines-operator/api/v1alpha1"
-	"github.com/opendatahub-io/data-science-pipelines-operator/controllers"
 	routev1 "github.com/openshift/api/route/v1"
+	"go.uber.org/zap/zapcore"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
+	// to ensure that exec-entrypoint and run can make use of them.
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
@@ -52,16 +56,54 @@ func init() {
 	utilruntime.Must(imagev1.AddToScheme(scheme))
 	utilruntime.Must(routev1.AddToScheme(scheme))
 
-	utilruntime.Must(dspipelinesiov1alpha1.AddToScheme(scheme))
+	utilruntime.Must(dspav1alpha1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
+}
+
+func initConfig(configPath string) error {
+	// Import environment variable, support nested vars e.g. OBJECTSTORECONFIG_ACCESSKEY
+	replacer := strings.NewReplacer(".", "_")
+	viper.SetEnvKeyReplacer(replacer)
+	// Check for an environment variable any time a viper.Get request is made.
+	viper.AutomaticEnv()
+	// Treat empty environment variables as set
+	viper.AllowEmptyEnv(true)
+
+	// Set configuration file name. The format is auto-detected in this case.
+	viper.SetConfigName("config")
+	viper.AddConfigPath(configPath)
+	err := viper.ReadInConfig()
+	if err != nil {
+		return err
+	}
+
+	for _, c := range config.GetConfigRequiredFields() {
+		if !viper.IsSet(c) {
+			return fmt.Errorf(fmt.Sprintf("Missing required field in config: %s", c))
+		}
+	}
+
+	// Watch cfg file for live changes
+	viper.WatchConfig()
+	viper.OnConfigChange(func(e fsnotify.Event) {
+		// Read in cfg again
+		err := viper.ReadInConfig()
+		if err != nil {
+			return
+		}
+	})
+
+	return nil
 }
 
 func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
 	var probeAddr string
+	var configPath string
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
+	flag.StringVar(&configPath, "config", "", "Path to JSON file containing config")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
@@ -73,6 +115,11 @@ func main() {
 	flag.Parse()
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
+
+	err := initConfig(configPath)
+	if err != nil {
+		glog.Fatal(err)
+	}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
@@ -87,15 +134,16 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.DSPipelineReconciler{
+	if err = (&controllers.DSPAReconciler{
 		Client:        mgr.GetClient(),
 		Scheme:        mgr.GetScheme(),
 		Log:           ctrl.Log,
 		TemplatesPath: "config/internal/",
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "DSPipelineParams")
+		setupLog.Error(err, "unable to create controller", "controller", "DSPAParams")
 		os.Exit(1)
 	}
+
 	//+kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {

@@ -19,6 +19,7 @@ package testutil
 import (
 	"fmt"
 	appsv1 "k8s.io/api/apps/v1"
+	v1 "k8s.io/api/core/v1"
 	"reflect"
 )
 
@@ -26,60 +27,73 @@ func notEqualMsg(value string) {
 	print(fmt.Sprintf("%s are not equal.", value))
 }
 
-func DeploymentsAreEqual(dp1 appsv1.Deployment, dp2 appsv1.Deployment) bool {
+func ConfigMapsAreEqual(expected v1.ConfigMap, actual v1.ConfigMap) bool {
+	if expected.Name != actual.Name {
+		notEqualMsg("Configmap Names are not equal.")
+		return false
+	}
 
-	if !reflect.DeepEqual(dp1.ObjectMeta.Labels, dp2.ObjectMeta.Labels) {
+	if !reflect.DeepEqual(expected.Data, actual.Data) {
+		notEqualMsg("Configmap's Data values")
+		return false
+	}
+	return true
+}
+
+func DeploymentsAreEqual(expectedDep appsv1.Deployment, actualDep appsv1.Deployment) bool {
+
+	if !reflect.DeepEqual(expectedDep.ObjectMeta.Labels, actualDep.ObjectMeta.Labels) {
 		notEqualMsg("labels")
 		return false
 	}
 
-	if !reflect.DeepEqual(dp1.Spec.Selector, dp2.Spec.Selector) {
+	if !reflect.DeepEqual(expectedDep.Spec.Selector, actualDep.Spec.Selector) {
 		notEqualMsg("selector")
 		return false
 	}
 
-	if !reflect.DeepEqual(dp1.Spec.Template.ObjectMeta, dp2.Spec.Template.ObjectMeta) {
+	if !reflect.DeepEqual(expectedDep.Spec.Template.ObjectMeta, actualDep.Spec.Template.ObjectMeta) {
 		notEqualMsg("selector")
 		return false
 	}
 
-	if !reflect.DeepEqual(dp1.Spec.Template.Spec.Volumes, dp2.Spec.Template.Spec.Volumes) {
+	if !reflect.DeepEqual(expectedDep.Spec.Template.Spec.Volumes, actualDep.Spec.Template.Spec.Volumes) {
 		notEqualMsg("Volumes")
 		return false
 	}
 
-	if len(dp1.Spec.Template.Spec.Containers) != len(dp2.Spec.Template.Spec.Containers) {
+	if len(expectedDep.Spec.Template.Spec.Containers) != len(actualDep.Spec.Template.Spec.Containers) {
 		notEqualMsg("Containers")
 		return false
 	}
-	for i := range dp1.Spec.Template.Spec.Containers {
-		c1 := dp1.Spec.Template.Spec.Containers[i]
-		c2 := dp2.Spec.Template.Spec.Containers[i]
-		if !reflect.DeepEqual(c1.Env, c2.Env) {
+	for i := range expectedDep.Spec.Template.Spec.Containers {
+		expectedContainer := expectedDep.Spec.Template.Spec.Containers[i]
+		actualContainer := actualDep.Spec.Template.Spec.Containers[i]
+		if !reflect.DeepEqual(expectedContainer.Env, actualContainer.Env) {
 			notEqualMsg("Container Env")
 			return false
 		}
-		if !reflect.DeepEqual(c1.Ports, c2.Ports) {
+		if !reflect.DeepEqual(expectedContainer.Ports, actualContainer.Ports) {
 			notEqualMsg("Container Ports")
 			return false
 		}
-		if !reflect.DeepEqual(c1.Resources, c2.Resources) {
+		if !reflect.DeepEqual(expectedContainer.Resources, actualContainer.Resources) {
 			notEqualMsg("Container Resources")
 			return false
 		}
-		if !reflect.DeepEqual(c1.VolumeMounts, c2.VolumeMounts) {
+		if !reflect.DeepEqual(expectedContainer.VolumeMounts, actualContainer.VolumeMounts) {
 			notEqualMsg("Container VolumeMounts")
 			return false
 		}
-		if !reflect.DeepEqual(c1.Args, c2.Args) {
+		if !reflect.DeepEqual(expectedContainer.Args, actualContainer.Args) {
 			notEqualMsg("Container Args")
 			return false
 		}
-		if c1.Name != c2.Name {
+		if expectedContainer.Name != actualContainer.Name {
 			notEqualMsg("Container Name")
 			return false
 		}
-		if c1.Image != c2.Image {
+		if expectedContainer.Image != actualContainer.Image {
 			notEqualMsg("Container Image")
 			return false
 		}
