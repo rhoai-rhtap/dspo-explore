@@ -32,45 +32,48 @@ type DSPASpec struct {
 	*ViewerCRD `json:"viewerCRD,omitempty"`
 	// +kubebuilder:default:={mariaDB: {deploy: true}}
 	*Database `json:"database,omitempty"`
-	// +kubebuilder:default:={minio: {deploy: true}}
-	*ObjectStorage `json:"objectStorage,omitempty"`
-	// +kubebuilder:default:={deploy: true}
-	*MlPipelineUI `json:"mlpipelineUI,omitempty"`
+	// +kubebuilder:validation:Optional
+	*MlPipelineUI `json:"mlpipelineUI"`
+	// +kubebuilder:validation:Required
+	*ObjectStorage `json:"objectStorage"`
 }
 
 type APIServer struct {
 	// +kubebuilder:default:=true
-	// +optional
+	// +kubebuilder:validation:Optional
 	Deploy bool   `json:"deploy"`
 	Image  string `json:"image,omitempty"`
 	// +kubebuilder:default:=true
-	// +optional
+	// +kubebuilder:validation:Optional
 	ApplyTektonCustomResource bool `json:"applyTektonCustomResource"`
 	// +kubebuilder:default:=false
-	// +optional
+	// +kubebuilder:validation:Optional
 	ArchiveLogs              bool   `json:"archiveLogs"`
 	ArtifactImage            string `json:"artifactImage,omitempty"`
 	CacheImage               string `json:"cacheImage,omitempty"`
 	MoveResultsImage         string `json:"moveResultsImage,omitempty"`
 	*ArtifactScriptConfigMap `json:"artifactScriptConfigMap,omitempty"`
 	// +kubebuilder:default:=true
-	// +optional
+	// +kubebuilder:validation:Optional
 	InjectDefaultScript bool `json:"injectDefaultScript"`
 	// +kubebuilder:default:=true
-	// +optional
+	// +kubebuilder:validation:Optional
 	StripEOF bool `json:"stripEOF"`
 	// +kubebuilder:default:=Cancelled
 	TerminateStatus string `json:"terminateStatus,omitempty"`
 	// +kubebuilder:default:=true
-	// +optional
+	// +kubebuilder:validation:Optional
 	TrackArtifacts bool `json:"trackArtifacts"`
 	// +kubebuilder:default:=120
 	DBConfigConMaxLifetimeSec int `json:"dbConfigConMaxLifetimeSec,omitempty"`
 	// +kubebuilder:default:=true
-	// +optional
+	// +kubebuilder:validation:Optional
 	CollectMetrics bool `json:"collectMetrics"`
 	// +kubebuilder:default:=true
-	// +optional
+	// +kubebuilder:validation:Optional
+	EnableRoute bool `json:"enableOauth"`
+	// +kubebuilder:default:=true
+	// +kubebuilder:validation:Optional
 	AutoUpdatePipelineDefaultVersion bool                  `json:"autoUpdatePipelineDefaultVersion"`
 	Resources                        *ResourceRequirements `json:"resources,omitempty"`
 }
@@ -82,7 +85,7 @@ type ArtifactScriptConfigMap struct {
 
 type PersistenceAgent struct {
 	// +kubebuilder:default:=true
-	// +optional
+	// +kubebuilder:validation:Optional
 	Deploy bool   `json:"deploy"`
 	Image  string `json:"image,omitempty"`
 	// +kubebuilder:default:=2
@@ -92,7 +95,7 @@ type PersistenceAgent struct {
 
 type ScheduledWorkflow struct {
 	// +kubebuilder:default:=true
-	// +optional
+	// +kubebuilder:validation:Optional
 	Deploy bool   `json:"deploy"`
 	Image  string `json:"image,omitempty"`
 	// +kubebuilder:default:=UTC
@@ -102,7 +105,7 @@ type ScheduledWorkflow struct {
 
 type ViewerCRD struct {
 	// +kubebuilder:default:=false
-	// +optional
+	// +kubebuilder:validation:Optional
 	Deploy bool   `json:"deploy"`
 	Image  string `json:"image,omitempty"`
 	// +kubebuilder:default:=50
@@ -112,11 +115,12 @@ type ViewerCRD struct {
 
 type MlPipelineUI struct {
 	// +kubebuilder:default:=true
-	// +optional
+	// +kubebuilder:validation:Optional
 	Deploy        bool                  `json:"deploy"`
-	Image         string                `json:"image,omitempty"`
 	ConfigMapName string                `json:"configMap,omitempty"`
 	Resources     *ResourceRequirements `json:"resources,omitempty"`
+	// +kubebuilder:validation:Required
+	Image string `json:"image"`
 }
 
 type Database struct {
@@ -126,7 +130,7 @@ type Database struct {
 
 type MariaDB struct {
 	// +kubebuilder:default:=true
-	// +optional
+	// +kubebuilder:validation:Optional
 	Deploy bool   `json:"deploy"`
 	Image  string `json:"image,omitempty"`
 	// +kubebuilder:default:=mlpipeline
@@ -154,15 +158,16 @@ type ObjectStorage struct {
 
 type Minio struct {
 	// +kubebuilder:default:=true
-	// +optional
-	Deploy bool   `json:"deploy"`
-	Image  string `json:"image,omitempty"`
+	// +kubebuilder:validation:Optional
+	Deploy bool `json:"deploy"`
 	// +kubebuilder:default:=mlpipeline
 	Bucket              string `json:"bucket,omitempty"`
 	*S3CredentialSecret `json:"s3CredentialsSecret,omitempty"`
 	// +kubebuilder:default:="10Gi"
 	PVCSize   string                `json:"pvcSize,omitempty"`
 	Resources *ResourceRequirements `json:"resources,omitempty"`
+	// +kubebuilder:validation:Required
+	Image string `json:"image"`
 }
 
 // ResourceRequirements structures compute resource requirements.
@@ -179,11 +184,12 @@ type Resources struct {
 }
 
 type ExternalStorage struct {
-	Host                string `json:"host,omitempty"`
-	Port                string `json:"port,omitempty"`
-	Bucket              string `json:"bucket,omitempty"`
-	Scheme              string `json:"scheme,omitempty"`
-	*S3CredentialSecret `json:"s3CredentialsSecret,omitempty"`
+	// +kubebuilder:validation:Required
+	Host                string `json:"host"`
+	Port                string `json:"port"`
+	Bucket              string `json:"bucket"`
+	Scheme              string `json:"scheme"`
+	*S3CredentialSecret `json:"s3CredentialsSecret"`
 }
 
 type S3CredentialSecret struct {

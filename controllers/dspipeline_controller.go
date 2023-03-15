@@ -29,6 +29,7 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -101,10 +102,24 @@ func (r *DSPAReconciler) DeleteResource(params *DSPAParams, template string, fns
 	return nil
 }
 
+func (r *DSPAReconciler) DeleteResourceIfItExists(ctx context.Context, obj client.Object, nn types.NamespacedName) error {
+	err := r.Get(ctx, nn, obj)
+	if err == nil {
+		err = r.Delete(ctx, obj)
+	} else if apierrs.IsNotFound(err) {
+		err = nil
+	}
+	if err != nil {
+		return err
+	}
+	return err
+}
+
 //+kubebuilder:rbac:groups=datasciencepipelinesapplications.opendatahub.io,resources=datasciencepipelinesapplications,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=datasciencepipelinesapplications.opendatahub.io,resources=datasciencepipelinesapplications/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=datasciencepipelinesapplications.opendatahub.io,resources=datasciencepipelinesapplications/finalizers,verbs=update
 //+kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=networking.k8s.io,resources=networkpolicies,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=*,resources=deployments;services,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=core,resources=secrets;configmaps;services;serviceaccounts;persistentvolumes;persistentvolumeclaims,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=core,resources=persistentvolumes;persistentvolumeclaims,verbs=*
@@ -151,11 +166,6 @@ func (r *DSPAReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 		dspa.APIVersion, dspa.Kind = gvk.Version, gvk.Kind
 	}
 
-	err = params.ExtractParams(ctx, dspa, r.Client, r.Log)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-
 	// Ensure that empty values do not overwrite desired state
 	if dspa.ObjectMeta.DeletionTimestamp.IsZero() {
 		if !controllerutil.ContainsFinalizer(dspa, finalizerName) {
@@ -166,6 +176,8 @@ func (r *DSPAReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 		}
 	} else {
 		if controllerutil.ContainsFinalizer(dspa, finalizerName) {
+			params.Name = dspa.Name
+			params.Namespace = dspa.Namespace
 			if err := r.cleanUpResources(ctx, req, dspa, params); err != nil {
 				return ctrl.Result{}, err
 			}
@@ -176,6 +188,12 @@ func (r *DSPAReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 		}
 
 		// Stop reconciliation as the item is being deleted
+		return ctrl.Result{}, nil
+	}
+
+	err = params.ExtractParams(ctx, dspa, r.Client, r.Log)
+	if err != nil {
+		log.Info(fmt.Sprintf("Encountered error when parsing CR: [%s]", err))
 		return ctrl.Result{}, nil
 	}
 
@@ -197,7 +215,12 @@ func (r *DSPAReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 		}
 	}
 
-	err = r.ReconcileAPIServer(dspa, params)
+	err = r.ReconcileCommon(dspa, params)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	err = r.ReconcileAPIServer(ctx, dspa, params)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -244,7 +267,7 @@ func (r *DSPAReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 // Clean Up any resources not handled by garbage collection, like Cluster ResourceRequirements
 func (r *DSPAReconciler) cleanUpResources(ctx context.Context, req ctrl.Request, dsp *dspav1alpha1.DataSciencePipelinesApplication, params *DSPAParams) error {
-	err := r.CleanUpUI(params)
+	err := r.CleanUpCommon(params)
 	if err != nil {
 		return err
 	}

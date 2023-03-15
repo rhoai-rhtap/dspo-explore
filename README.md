@@ -96,7 +96,7 @@ Now we will navigate to the DSPO manifests then build and deploy them to this na
 
 ```bash
 cd ${WORKING_DIR}
-make deploy
+make deploy OPERATOR_NS=${DSPO_NS}
 ```
 
 Confirm the pods are successfully deployed and reach running state:
@@ -126,6 +126,11 @@ inspect this sample resource to see other configurable options.
 cd ${WORKING_DIR}/config/samples
 kustomize build . | oc -n ${DSP_Namespace} apply -f -
 ```
+
+> Note: the sample CR used here deploys a minio instance so DSP may work out of the box
+> this is unsupported in production environments and we recommend to provide your own 
+> object storage connection details via spec.objectStorage.externalStorage
+> see ${WORKING_DIR}/config/samples/dspa_simple_external_storage.yaml for an example.
 
 Confirm all pods reach ready state by running: 
 
@@ -313,7 +318,7 @@ To clean up standalone DSPO deployment:
 ```bash
 # WORKING_DIR must be the root of this repository's clone
 cd ${WORKING_DIR}
-make undeploy
+make undeploy OPERATOR_NS=${DSPO_NS}
 oc delete project ${DSPO_NS}
 ```
 
