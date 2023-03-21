@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -139,16 +140,17 @@ type MariaDB struct {
 	// +kubebuilder:default:=mlpipeline
 	DBName string `json:"pipelineDBName,omitempty"`
 	// +kubebuilder:default:="10Gi"
-	PVCSize   string                `json:"pvcSize,omitempty"`
+	PVCSize   resource.Quantity     `json:"pvcSize,omitempty"`
 	Resources *ResourceRequirements `json:"resources,omitempty"`
 }
 
 type ExternalDB struct {
-	Host           string          `json:"host,omitempty"`
-	Port           string          `json:"port,omitempty"`
-	Username       string          `json:"username,omitempty"`
-	DBName         string          `json:"pipelineDBName,omitempty"`
-	PasswordSecret *SecretKeyValue `json:"passwordSecret,omitempty"`
+	// +kubebuilder:validation:Required
+	Host           string          `json:"host"`
+	Port           string          `json:"port"`
+	Username       string          `json:"username"`
+	DBName         string          `json:"pipelineDBName"`
+	PasswordSecret *SecretKeyValue `json:"passwordSecret"`
 }
 
 type ObjectStorage struct {
@@ -164,7 +166,7 @@ type Minio struct {
 	Bucket              string `json:"bucket,omitempty"`
 	*S3CredentialSecret `json:"s3CredentialsSecret,omitempty"`
 	// +kubebuilder:default:="10Gi"
-	PVCSize   string                `json:"pvcSize,omitempty"`
+	PVCSize   resource.Quantity     `json:"pvcSize,omitempty"`
 	Resources *ResourceRequirements `json:"resources,omitempty"`
 	// +kubebuilder:validation:Required
 	Image string `json:"image"`
@@ -179,29 +181,31 @@ type ResourceRequirements struct {
 }
 
 type Resources struct {
-	CPU    string `json:"cpu,omitempty"`
-	Memory string `json:"memory,omitempty"`
+	CPU    resource.Quantity `json:"cpu,omitempty"`
+	Memory resource.Quantity `json:"memory,omitempty"`
 }
 
 type ExternalStorage struct {
 	// +kubebuilder:validation:Required
 	Host                string `json:"host"`
-	Port                string `json:"port"`
 	Bucket              string `json:"bucket"`
 	Scheme              string `json:"scheme"`
+	Port                string `json:"port"`
 	*S3CredentialSecret `json:"s3CredentialsSecret"`
 }
 
 type S3CredentialSecret struct {
-	SecretName string `json:"secretName,omitempty"`
+	// +kubebuilder:validation:Required
+	SecretName string `json:"secretName"`
 	// The "Keys" in the k8sSecret key/value pairs. Not to be confused with the values.
-	AccessKey string `json:"accessKey,omitempty"`
-	SecretKey string `json:"secretKey,omitempty"`
+	AccessKey string `json:"accessKey"`
+	SecretKey string `json:"secretKey"`
 }
 
 type SecretKeyValue struct {
-	Name string `json:"name,omitempty"`
-	Key  string `json:"key,omitempty"`
+	// +kubebuilder:validation:Required
+	Name string `json:"name"`
+	Key  string `json:"key"`
 }
 
 type DSPAStatus struct {

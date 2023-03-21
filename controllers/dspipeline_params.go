@@ -20,16 +20,18 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"math/rand"
+	"time"
+
 	"github.com/go-logr/logr"
 	mf "github.com/manifestival/manifestival"
 	dspa "github.com/opendatahub-io/data-science-pipelines-operator/api/v1alpha1"
 	"github.com/opendatahub-io/data-science-pipelines-operator/controllers/config"
 	v1 "k8s.io/api/core/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/types"
-	"math/rand"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"time"
 )
 
 type DSPAParams struct {
@@ -106,8 +108,8 @@ func (p *DSPAParams) SetupDBParams(ctx context.Context, dsp *dspa.DataSciencePip
 
 	// Even if a secret is specified DSPO will deploy its own secret owned by DSPO
 	p.DBConnection.CredentialsSecret = &dspa.SecretKeyValue{
-		Name: config.MariaDBSecretNamePrefix + p.Name,
-		Key:  config.MariaDBSecretKey,
+		Name: config.DBSecretNamePrefix + p.Name,
+		Key:  config.DBSecretKey,
 	}
 
 	if usingExternalDB {
@@ -118,7 +120,6 @@ func (p *DSPAParams) SetupDBParams(ctx context.Context, dsp *dspa.DataSciencePip
 		p.DBConnection.DBName = dsp.Spec.Database.ExternalDB.DBName
 		customCreds = dsp.Spec.Database.ExternalDB.PasswordSecret
 	} else {
-
 		// If no externalDB or mariaDB is specified, DSPO assumes
 		// MariaDB deployment with defaults.
 		if p.MariaDB == nil {
@@ -128,7 +129,7 @@ func (p *DSPAParams) SetupDBParams(ctx context.Context, dsp *dspa.DataSciencePip
 				Resources: config.MariaDBResourceRequirements.DeepCopy(),
 				Username:  config.MariaDBUser,
 				DBName:    config.MariaDBName,
-				PVCSize:   config.MariaDBNamePVCSize,
+				PVCSize:   resource.MustParse(config.MariaDBNamePVCSize),
 			}
 		}
 		// If MariaDB was specified, ensure missing fields are
@@ -245,7 +246,6 @@ func (p *DSPAParams) SetupObjectParams(ctx context.Context, dsp *dspa.DataScienc
 		p.Minio.Image = dsp.Spec.ObjectStorage.Minio.Image
 
 		setStringDefault(config.MinioDefaultBucket, &p.Minio.Bucket)
-		setStringDefault(config.MinioPVCSize, &p.Minio.PVCSize)
 		setResourcesDefault(config.MinioResourceRequirements, &p.Minio.Resources)
 
 		p.ObjectStorageConnection.Bucket = config.MinioDefaultBucket
@@ -261,12 +261,14 @@ func (p *DSPAParams) SetupObjectParams(ctx context.Context, dsp *dspa.DataScienc
 		}
 	}
 
-	p.ObjectStorageConnection.Endpoint = fmt.Sprintf(
+	endpoint := fmt.Sprintf(
 		"%s://%s:%s",
 		p.ObjectStorageConnection.Scheme,
 		p.ObjectStorageConnection.Host,
 		p.ObjectStorageConnection.Port,
 	)
+
+	p.ObjectStorageConnection.Endpoint = endpoint
 
 	// Secret where DB credentials reside on cluster
 	var credsSecretName string
