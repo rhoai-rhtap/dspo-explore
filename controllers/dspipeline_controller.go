@@ -163,7 +163,7 @@ func (r *DSPAReconciler) isDeploymentAvailable(ctx context.Context, dspa *dspav1
 //+kubebuilder:rbac:groups=monitoring.coreos.com,resources=servicemonitors,verbs=get;list;watch;create;update;patch;delete
 
 func (r *DSPAReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := r.Log.WithValues("namespace", req.Namespace)
+	log := r.Log.WithValues("namespace", req.Namespace).WithValues("dspa_name", req.Name)
 
 	log.V(1).Info("DataSciencePipelinesApplication Reconciler called.")
 
@@ -275,11 +275,6 @@ func (r *DSPAReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 		return ctrl.Result{}, err
 	}
 
-	err = r.ReconcileViewerCRD(dspa, params)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-
 	log.Info("Updating CR status")
 
 	crReady := r.buildCondition(config.CrReady, dspa, config.MinimumReplicasAvailable)
@@ -308,7 +303,46 @@ func (r *DSPAReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 		return ctrl.Result{}, err
 	}
 
+	r.PublishMetrics(dspa, apiServerReady, persistenceAgentReady, scheduledWorkflowReady, crReady)
+
 	return ctrl.Result{}, nil
+}
+
+func (r *DSPAReconciler) PublishMetrics(dspa *dspav1alpha1.DataSciencePipelinesApplication,
+	apiServerReady, persistenceAgentReady, scheduledWorkflowReady,
+	crReady metav1.Condition) {
+	r.Log.Info("Publishing Ready Metrics")
+	if apiServerReady.Status == metav1.ConditionTrue {
+		r.Log.Info("APIServer Ready")
+		APIServerReadyMetric.WithLabelValues(dspa.Name, dspa.Namespace).Set(1)
+	} else {
+		r.Log.Info("APIServer Not Ready")
+		APIServerReadyMetric.WithLabelValues(dspa.Name, dspa.Namespace).Set(0)
+	}
+
+	if persistenceAgentReady.Status == metav1.ConditionTrue {
+		r.Log.Info("PersistanceAgent Ready")
+		PersistenceAgentReadyMetric.WithLabelValues(dspa.Name, dspa.Namespace).Set(1)
+	} else {
+		r.Log.Info("PersistanceAgent Not Ready")
+		PersistenceAgentReadyMetric.WithLabelValues(dspa.Name, dspa.Namespace).Set(0)
+	}
+
+	if scheduledWorkflowReady.Status == metav1.ConditionTrue {
+		r.Log.Info("ScheduledWorkflow Ready")
+		ScheduledWorkflowReadyMetric.WithLabelValues(dspa.Name, dspa.Namespace).Set(1)
+	} else {
+		r.Log.Info("ScheduledWorkflow Not Ready")
+		ScheduledWorkflowReadyMetric.WithLabelValues(dspa.Name, dspa.Namespace).Set(0)
+	}
+
+	if crReady.Status == metav1.ConditionTrue {
+		r.Log.Info("CR Fully Ready")
+		CrReadyMetric.WithLabelValues(dspa.Name, dspa.Namespace).Set(1)
+	} else {
+		r.Log.Info("CR Not Ready")
+		CrReadyMetric.WithLabelValues(dspa.Name, dspa.Namespace).Set(0)
+	}
 }
 
 // SetupWithManager sets up the controller with the Manager.

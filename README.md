@@ -9,8 +9,10 @@ Data Science Pipeline stacks onto individual OCP namespaces.
    1. [Pre-requisites](#pre-requisites)
    2. [Deploy the Operator via ODH](#deploy-the-operator-via-odh)
    3. [Deploy the Operator standalone](#deploy-the-operator-standalone)
-   4. [Deploy DSP instance](#deploy-dsp-instance)
-      1. [Deploy another DSP instance](#deploy-another-dsp-instance)
+   4. [Deploy DSPA instance](#deploy-dsp-instance)
+      1. [Deploy another DSPA instance](#deploy-another-dsp-instance)
+      2. [Deploy a DSPA with custom credentials](#deploy-a-dsp-with-custom-credentials)
+      3. [Deploy a DSPA with External Object Storage](#deploy-a-dsp-with-external-object-storage)
 2. [DataSciencePipelinesApplication Component Overview](#datasciencepipelinesapplication-component-overview)
 3. [Using a DataSciencePipelinesApplication](#using-a-datasciencepipelinesapplication)
    1. [Using the Graphical UI](#using-the-graphical-ui)
@@ -19,6 +21,7 @@ Data Science Pipeline stacks onto individual OCP namespaces.
    1. [Cleanup ODH Installation](#cleanup-odh-installation)
    2. [Cleanup Standalone Installation](#cleanup-standalone-installation)
 5. [Run tests](#run-tests)
+6. [Metrics](#metrics)
 
 # Quickstart
 
@@ -170,13 +173,28 @@ Notice the introduction of 2 `secrets` `testdbsecret`, `teststoragesecret` and 2
 
 These can be configured by the end user as needed.
 
+### Deploy a DSP with external Object Storage
+
+To specify a custom Object Storage (example an AWS s3 bucket) you will need to provide DSPO with your S3 credentials in 
+the form of a k8s `Secret`, see an example of such a secret here `config/samples/external-object-storage/storage-creds.yaml`.
+
+DSPO can deploy a DSPA instance and use this S3 bucket for storing its metadata and pipeline artifacts. A sample 
+configuration for a DSPA that does this is found in `config/samples/external-object-storage`, you can update this as 
+needed, and deploy this DSPA by running the following:
+
+```bash
+DSP_Namespace_3=test-ds-project-4
+oc new-project ${DSP_Namespace_4}
+cd ${WORKING_DIR}/config/samples/external-object-storage
+kustomize build . | oc -n ${DSP_Namespace_3} apply -f -
+```
+
 # DataSciencePipelinesApplication Component Overview
 
 When a `DataSciencePipelinesApplication` is deployed, the following components are deployed in the target namespace: 
 * APIServer 
 * Persistence Agent
 * Scheduled Workflow controller
-* Viewer CRD controller
 * MLPipelines UI
 
 If specified in the `DataSciencePipelinesApplication` resource, the following components may also be additionally deployed: 
@@ -358,6 +376,17 @@ pre-commit run --all-files
 You can find a more permanent location to install `setup-envtest` into on your local filesystem and export 
 `KUBEBUILDER_ASSETS` into your `.bashrc` or equivalent. By doing this you can always run `pre-commit run --all-files` 
 without having to repeat these steps.
+
+# Metrics
+
+The Data Science Pipelines Operator exposes standard operator-sdk metrics for controller monitoring purposes.  
+In addition to these metrics, DSPO also exposes several custom metrics for monitoring the status of the DataSciencePipelinesApplications that it owns.
+
+They are as follows:
+- `data_science_pipelines_application_apiserver_ready` - Gauge that indicates if the DSPA's APIServer is in a Ready state (1 => Ready, 0 => Not Ready)
+- `data_science_pipelines_application_persistenceagent_ready` - Gauge that indicates if the DSPA's PersistenceAgent is in a Ready state (1 => Ready, 0 => Not Ready)
+- `data_science_pipelines_application_scheduledworkflow_ready` - Gauge that indicates if the DSPA's ScheduledWorkflow manager is in a Ready state (1 => Ready, 0 => Not Ready)
+- `data_science_pipelines_application_ready` - Gauge that indicates if the DSPA is in a fully Ready state (1 => Ready, 0 => Not Ready)
 
 [cluster admin]: https://docs.openshift.com/container-platform/4.12/authentication/using-rbac.html#creating-cluster-admin_using-rbac
 [oc client]: https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/latest/openshift-client-linux.tar.gz

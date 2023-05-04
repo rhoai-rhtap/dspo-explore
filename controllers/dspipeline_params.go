@@ -41,7 +41,6 @@ type DSPAParams struct {
 	APIServer            *dspa.APIServer
 	APIServerServiceName string
 	ScheduledWorkflow    *dspa.ScheduledWorkflow
-	ViewerCRD            *dspa.ViewerCRD
 	PersistenceAgent     *dspa.PersistenceAgent
 	MlPipelineUI         *dspa.MlPipelineUI
 	MariaDB              *dspa.MariaDB
@@ -221,14 +220,15 @@ func (p *DSPAParams) SetupObjectParams(ctx context.Context, dsp *dspa.DataScienc
 		AccessKey:  config.ObjectStorageAccessKey,
 		SecretKey:  config.ObjectStorageSecretKey,
 	}
-	p.ObjectStorageConnection.Secure = config.ObjectStoreConnectionSecure
 
 	if usingExternalObjectStorage {
 		// Assume validation for CR ensures these values exist
 		p.ObjectStorageConnection.Bucket = dsp.Spec.ObjectStorage.ExternalStorage.Bucket
 		p.ObjectStorageConnection.Host = dsp.Spec.ObjectStorage.ExternalStorage.Host
-		p.ObjectStorageConnection.Port = dsp.Spec.ObjectStorage.ExternalStorage.Port
 		p.ObjectStorageConnection.Scheme = dsp.Spec.ObjectStorage.ExternalStorage.Scheme
+		p.ObjectStorageConnection.Secure = dsp.Spec.ObjectStorage.ExternalStorage.Secure
+		// Port can be empty, which is fine.
+		p.ObjectStorageConnection.Port = dsp.Spec.ObjectStorage.ExternalStorage.Port
 		customCreds = dsp.Spec.ObjectStorage.ExternalStorage.S3CredentialSecret
 	} else {
 		if p.Minio == nil {
@@ -262,15 +262,22 @@ func (p *DSPAParams) SetupObjectParams(ctx context.Context, dsp *dspa.DataScienc
 	}
 
 	endpoint := fmt.Sprintf(
-		"%s://%s:%s",
+		"%s://%s",
 		p.ObjectStorageConnection.Scheme,
 		p.ObjectStorageConnection.Host,
-		p.ObjectStorageConnection.Port,
 	)
+
+	if p.ObjectStorageConnection.Port != "" {
+		endpoint = fmt.Sprintf(
+			"%s:%s",
+			endpoint,
+			p.ObjectStorageConnection.Port,
+		)
+	}
 
 	p.ObjectStorageConnection.Endpoint = endpoint
 
-	// Secret where DB credentials reside on cluster
+	// Secret where credentials reside on cluster
 	var credsSecretName string
 	var credsAccessKey string
 	var credsSecretKey string
@@ -348,7 +355,6 @@ func (p *DSPAParams) ExtractParams(ctx context.Context, dsp *dspa.DataSciencePip
 	p.APIServer = dsp.Spec.APIServer.DeepCopy()
 	p.APIServerServiceName = fmt.Sprintf("%s-%s", config.DSPServicePrefix, p.Name)
 	p.ScheduledWorkflow = dsp.Spec.ScheduledWorkflow.DeepCopy()
-	p.ViewerCRD = dsp.Spec.ViewerCRD.DeepCopy()
 	p.PersistenceAgent = dsp.Spec.PersistenceAgent.DeepCopy()
 	p.MlPipelineUI = dsp.Spec.MlPipelineUI.DeepCopy()
 	p.MariaDB = dsp.Spec.MariaDB.DeepCopy()
@@ -379,10 +385,6 @@ func (p *DSPAParams) ExtractParams(ctx context.Context, dsp *dspa.DataSciencePip
 	if p.ScheduledWorkflow != nil {
 		p.ScheduledWorkflow.Image = config.GetStringConfigWithDefault(config.ScheduledWorkflowImagePath, config.DefaultImageValue)
 		setResourcesDefault(config.ScheduledWorkflowResourceRequirements, &p.ScheduledWorkflow.Resources)
-	}
-	if p.ViewerCRD != nil {
-		p.ViewerCRD.Image = config.GetStringConfigWithDefault(config.ViewerCRDImagePath, config.DefaultImageValue)
-		setResourcesDefault(config.ViewerCRDResourceRequirements, &p.ViewerCRD.Resources)
 	}
 	if p.MlPipelineUI != nil {
 		if dsp.Spec.MlPipelineUI.Image == "" {
