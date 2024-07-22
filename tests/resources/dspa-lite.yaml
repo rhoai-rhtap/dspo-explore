@@ -4,6 +4,7 @@ metadata:
   name: test-dspa
 spec:
   dspVersion: v2
+  podToPodTLS: false
   apiServer:
     deploy: true
     enableOauth: false
@@ -61,11 +62,11 @@ spec:
       pvcSize: 500Mi
       resources:
         limits:
-          cpu: 20m
+          cpu: 60m
           memory: 500Mi
         requests:
-          cpu: 20m
-          memory: 100m
+          cpu: 60m
+          memory: 500Mi
   objectStorage:
     minio:
       deploy: true
