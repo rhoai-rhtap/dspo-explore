@@ -67,6 +67,12 @@ spec:
                       name:
                         type: string
                     type: object
+                  artifactSignedURLExpirySeconds:
+                    default: 15
+                    description: 'The expiry time (seconds) for artifact download
+                      links when querying the dsp server via /apis/v2beta1/artifacts/{id}?share_url=true
+                      Default: 15'
+                    type: integer
                   autoUpdatePipelineDefaultVersion:
                     default: true
                     description: 'Default: true Deprecated: DSP V1 only, will be removed
@@ -748,6 +754,12 @@ spec:
                         type: object
                     type: object
                 type: object
+              podToPodTLS:
+                default: true
+                description: PodToPodTLS Set to "true" or "false" to enable or disable
+                  TLS communication between DSPA components (pods). Defaults to "true"
+                  to enable TLS between all pods. Only supported in DSP V2 on OpenShift.
+                type: boolean
               scheduledWorkflow:
                 default:
                   deploy: true
@@ -818,6 +830,41 @@ spec:
                     type: boolean
                   image:
                     type: string
+                  resources:
+                    description: Specify custom Pod resource requirements for this
+                      component.
+                    properties:
+                      limits:
+                        properties:
+                          cpu:
+                            anyOf:
+                            - type: integer
+                            - type: string
+                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                            x-kubernetes-int-or-string: true
+                          memory:
+                            anyOf:
+                            - type: integer
+                            - type: string
+                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                            x-kubernetes-int-or-string: true
+                        type: object
+                      requests:
+                        properties:
+                          cpu:
+                            anyOf:
+                            - type: integer
+                            - type: string
+                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                            x-kubernetes-int-or-string: true
+                          memory:
+                            anyOf:
+                            - type: integer
+                            - type: string
+                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                            x-kubernetes-int-or-string: true
+                        type: object
+                    type: object
                 type: object
             required:
             - objectStorage

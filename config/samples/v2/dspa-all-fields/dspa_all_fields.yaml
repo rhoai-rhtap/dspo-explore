@@ -12,6 +12,7 @@ spec:
   dspVersion: v2
   apiServer:
     deploy: true
+    enableSamplePipeline: true
     image: quay.io/opendatahub/ds-pipelines-api-server:latest
     argoLauncherImage: quay.io/org/kfp-launcher:latest
     argoDriverImage: quay.io/org/kfp-driver:latest
@@ -101,6 +102,18 @@ spec:
         requests:
           cpu: 100m
           memory: 256Mi
+  workflowController:
+    deploy: true
+    image: quay.io/opendatahub/ds-pipelines-argo-workflowcontroller:3.3.10-upstream
+    argoExecImage: quay.io/opendatahub/ds-pipelines-argo-argoexec:3.3.10-upstream
+    customConfig: some-custom-workflowcontroller-configmap  # see ../custom-workflow-controller-config for example
+    resources:
+      requests:
+        cpu: 120m
+        memory: 500Mi
+      limits:
+        cpu: 250m
+        memory: 1Gi
   database:
     disableHealthCheck: false
     # possible values for tls: true, false, skip-verify
