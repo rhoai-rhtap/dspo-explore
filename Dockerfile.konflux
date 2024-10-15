@@ -36,7 +36,7 @@ LABEL com.redhat.component="odh-data-science-pipelines-operator-controller-conta
       maintainer="['managed-open-data-hub@redhat.com']" \
       io.openshift.expose-services="" \
       io.k8s.display-name="data-science-pipelines-operator-controller" \
-      io.k8s.discription="data-science-pipelines-operator-controller" \
+      io.k8s.description="data-science-pipelines-operator-controller" \
       com.redhat.license_terms="https://www.redhat.com/licenses/Red_Hat_Standard_EULA_20191108.pdf"
 
 ## Install additional packages
