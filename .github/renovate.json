@@ -54,7 +54,7 @@
           "commitMessageTopic": "{{{groupName}}}"
         },
         "commitMessageTopic": "Konflux references",
-        "semanticCommits": true,
+        "semanticCommits": "enabled",
         "prFooter": "To execute skipped test pipelines write comment `/ok-to-test`",
         "prBodyColumns": [
           "Package",
@@ -67,18 +67,6 @@
         "prBodyTemplate": "{{{header}}}{{{table}}}{{{notes}}}{{{changelogs}}}{{{controls}}}{{{footer}}}",
         "recreateWhen": "always",
         "rebaseWhen": "behind-base-branch"
-      }
-    ]
-  },
-  "rpm": {
-    "enabled": true,
-    "packageRules": [
-      {
-        "matchPackagePatterns": ["^gcc", "^python", "^nodejs"],
-        "groupName": "RPM Updates",
-        "branchPrefix": "rpm-updates/",
-        "commitMessageTopic": "Update RPM Packages",
-        "enabled": true
       }
     ]
   },
