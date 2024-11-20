@@ -5,7 +5,6 @@
   ],
   "branchPrefix": "renovate/",
   "enabledManagers": ["dockerfile", "tekton", "rpm"],
-  "baseBranches": ["main"],
   "dockerfile": {
     "enabled": true,
     "baseBranches": ["main"],
