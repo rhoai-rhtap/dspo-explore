@@ -4,10 +4,11 @@
     "config:recommended"
   ],
   "branchPrefix": "renovate/",
-  "enabledManagers": ["dockerfile", "tekton", "rpm"],
+  "enabledManagers": ["dockerfile", "tekton"],
   "dockerfile": {
     "enabled": true,
     "baseBranches": ["main"],
+    "additionalBranchPrefix": "{{baseBranch}}/",
     "branchPrefix": "konflux/mintmaker/",
     "packageRules": [
       {
@@ -15,7 +16,6 @@
         "enabled": false
       },
       {
-        "matchBaseBranches": ["main"],
         "matchUpdateTypes": ["digest"],
         "matchFileNames": ["*Dockerfile.konflux*"],
         "enabled": true
@@ -30,10 +30,10 @@
     "includePaths": [
       ".tekton/**"
     ],
-    "ignoreTests": true,
-    "automergeType": "pr",
-    "baseBranches": ["test-1"],
-    "automerge": true,
+  "ignoreTests": true,
+  "automergeType": "pr",
+  "baseBranches": ["test-1"],
+  "automerge": true,
     "packageRules": [
       {
         "matchUpdateTypes": ["major", "minor", "pin", "pinDigest", "patch", "bump"],
@@ -49,7 +49,7 @@
         "groupName": "Konflux references",
         "branchPrefix": "konflux/references/",
         "group": {
-          "matchBaseBranches": ["test-1"],
+          "branchTopic": "test-1",
           "commitMessageTopic": "{{{groupName}}}"
         },
         "commitMessageTopic": "Konflux references",
@@ -69,5 +69,5 @@
       }
     ]
   },
-  "prHourlyLimit": 0
+ "prHourlyLimit": 0
 }
