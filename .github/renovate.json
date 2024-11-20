@@ -7,19 +7,19 @@
   "enabledManagers": ["dockerfile", "tekton", "rpm"],
   "baseBranches": ["main"],
   "dockerfile": {
-  "enabled": true,
-  "baseBranches": ["main"],
-  "additionalBranchPrefix": "main/",
-  "branchPrefix": "konflux/mintmaker/",
-  "packageRules": [
-    {
-      "matchUpdateTypes": ["major", "minor", "pin", "pinDigest", "patch", "bump"],
-      "enabled": false
-    },
-    {
-      "matchUpdateTypes": ["digest"],
-      "matchFileNames": ["*Dockerfile.konflux*"],
-      "enabled": true
+    "enabled": true,
+    "baseBranches": ["main"],
+    "additionalBranchPrefix": "main/",
+    "branchPrefix": "konflux/mintmaker/",
+    "packageRules": [
+      {
+        "matchUpdateTypes": ["major", "minor", "pin", "pinDigest", "patch", "bump"],
+        "enabled": false
+      },
+      {
+        "matchUpdateTypes": ["digest"],
+        "matchFileNames": ["*Dockerfile.konflux*"],
+        "enabled": true
       }
     ]
   },
@@ -31,10 +31,10 @@
     "includePaths": [
       ".tekton/**"
     ],
-  "ignoreTests": true,
-  "automergeType": "pr",
-  "baseBranches": ["test-1"],
-  "automerge": true,
+    "ignoreTests": true,
+    "automergeType": "pr",
+    "baseBranches": ["test-1"],
+    "automerge": true,
     "packageRules": [
       {
         "matchUpdateTypes": ["major", "minor", "pin", "pinDigest", "patch", "bump"],
@@ -54,7 +54,7 @@
           "commitMessageTopic": "{{{groupName}}}"
         },
         "commitMessageTopic": "Konflux references",
-        "semanticCommits": "enabled",
+        "semanticCommits": true,
         "prFooter": "To execute skipped test pipelines write comment `/ok-to-test`",
         "prBodyColumns": [
           "Package",
@@ -70,5 +70,17 @@
       }
     ]
   },
- "prHourlyLimit": 0
+  "rpm": {
+    "enabled": true,
+    "packageRules": [
+      {
+        "matchPackagePatterns": ["^gcc", "^python", "^nodejs"],
+        "groupName": "RPM Updates",
+        "branchPrefix": "rpm-updates/",
+        "commitMessageTopic": "Update RPM Packages",
+        "enabled": true
+      }
+    ]
+  },
+  "prHourlyLimit": 0
 }
