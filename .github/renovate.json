@@ -11,17 +11,19 @@
     "additionalBranchPrefix": "{{baseBranch}}/",
     "branchPrefix": "konflux/mintmaker/",
     "packageRules": [
-     {
-        "matchUpdateTypes": ["*"],
-        "enabled": false
-      },
-      {
-        "matchUpdateTypes": ["digest"],
-        "matchFileNames": ["*Dockerfile.konflux*"],
-        "enabled": true
-      }
-    ]
-  },
+    {
+      "matchBaseBranches": [
+        "2.0"
+      ],
+      "branchPrefix": "konflux/mintmaker/{{repository}}/component-a/"
+    },
+    {
+      "matchBaseBranches": [
+        "3.0"
+      ],
+      "branchPrefix": "konflux/mintmaker/{{repository}}/component-b/"
+    }
+  ]
   "tekton": {
     "fileMatch": [
       "\\.yaml$",
