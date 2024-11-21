@@ -1,18 +1,14 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended"
-  ],
-  "branchPrefix": "renovate/",
+  "timezone": "Asia/Kolkata",
+  "schedule": ["before 12:00pm"],
   "enabledManagers": ["dockerfile", "tekton"],
   "dockerfile": {
-    "schedule": ["at any time"],
     "enabled": true,
+    "schedule": ["before 12:00pm"],
     "baseBranches": ["main"],
-    "additionalBranchPrefix": "{{baseBranch}}/",
-    "branchPrefix": "konflux/mintmaker/",
     "packageRules": [
-     {
+      {
         "matchUpdateTypes": ["*"],
         "enabled": false
       },
@@ -24,20 +20,15 @@
     ]
   },
   "tekton": {
-    "fileMatch": [
-      "\\.yaml$",
-      "\\.yml$"
-    ],
-    "includePaths": [
-      ".tekton/**"
-    ],
-  "ignoreTests": true,
-  "automergeType": "pr",
-  "baseBranches": ["test-1"],
-  "automerge": true,
+    "fileMatch": ["\\.yaml$", "\\.yml$"],
+    "includePaths": [".tekton/**"],
+    "schedule": ["before 12:00pm"],
+    "automergeType": "pr",
+    "baseBranches": ["test-1"],
+    "automerge": true,
     "packageRules": [
       {
-        "matchUpdateTypes": ["major", "minor", "pin", "pinDigest", "patch", "bump"],
+        "matchUpdateTypes": ["major", "minor", "patch"],
         "enabled": false
       },
       {
@@ -48,27 +39,9 @@
         "matchUpdateTypes": ["digest"],
         "enabled": true,
         "groupName": "Konflux references",
-        "branchPrefix": "konflux/references/",
-        "group": {
-          "branchTopic": "test-1",
-          "commitMessageTopic": "{{{groupName}}}"
-        },
-        "commitMessageTopic": "Konflux references",
-        "semanticCommits": "enabled",
-        "prFooter": "To execute skipped test pipelines write comment `/ok-to-test`",
-        "prBodyColumns": [
-          "Package",
-          "Change",
-          "Notes"
-        ],
-        "prBodyDefinitions": {
-          "Notes": "{{#if (or (containsString updateType 'minor') (containsString updateType 'major'))}}:warning:[migration](https://github.com/redhat-appstudio/build-definitions/blob/main/task/{{{replace '^quay.io/(redhat-appstudio-tekton-catalog|konflux-ci/tekton-catalog)/task-' '' packageName}}}/{{{newVersion}}}/MIGRATION.md):warning:{{/if}}"
-        },
-        "prBodyTemplate": "{{{header}}}{{{table}}}{{{notes}}}{{{changelogs}}}{{{controls}}}{{{footer}}}",
-        "recreateWhen": "always",
-        "rebaseWhen": "behind-base-branch"
+        "branchPrefix": "konflux/references/"
       }
     ]
   },
- "prHourlyLimit": 0
+  "prHourlyLimit": 0
 }
