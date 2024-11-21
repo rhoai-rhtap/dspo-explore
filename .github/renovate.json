@@ -3,7 +3,6 @@
   "enabledManagers": ["dockerfile", "tekton"],
   "dockerfile": {
     "enabled": true,
-    "schedule": ["before 12:00pm"],
     "baseBranches": ["main"],
     "packageRules": [
       {
