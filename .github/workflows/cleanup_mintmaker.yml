@@ -25,7 +25,7 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GH_TOKEN }}
         REPO_OWNER: rhoai-rhtap
-        REPO_NAME: argo-workflows-explore
+        REPO_NAME: dspo-explore
       run: |
         python <<EOF
         import os
