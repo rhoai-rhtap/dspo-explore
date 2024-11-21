@@ -6,6 +6,7 @@
   "branchPrefix": "renovate/",
   "enabledManagers": ["dockerfile", "tekton"],
   "dockerfile": {
+    "schedule": ["at any time"],
     "enabled": true,
     "baseBranches": ["main"],
     "additionalBranchPrefix": "{{baseBranch}}/",
