@@ -13,13 +13,13 @@
     "packageRules": [
     {
       "matchBaseBranches": [
-        "2.0"
+        "main"
       ],
       "branchPrefix": "konflux/mintmaker/{{repository}}/component-a/"
     },
     {
       "matchBaseBranches": [
-        "3.0"
+        "test-1"
       ],
       "branchPrefix": "konflux/mintmaker/{{repository}}/component-b/"
     }
