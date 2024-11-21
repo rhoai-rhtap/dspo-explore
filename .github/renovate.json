@@ -12,10 +12,6 @@
     "branchPrefix": "konflux/mintmaker/",
     "packageRules": [
       {
-        "matchUpdateTypes": ["*"],
-        "enabled": false
-      },
-      {
         "matchUpdateTypes": ["digest"],
         "matchFileNames": ["*Dockerfile.konflux*"],
         "enabled": true
