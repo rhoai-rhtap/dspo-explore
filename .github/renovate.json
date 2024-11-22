@@ -3,6 +3,7 @@
   "extends": ["config:recommended"],
   "enabledManagers": ["dockerfile"],
   "dockerfile": {
+    "schedule": ["at any time"],
     "enabled": true,
     "baseBranches": ["main", "test-1"],
     "packageRules": [
