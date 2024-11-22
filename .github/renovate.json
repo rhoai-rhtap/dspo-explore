@@ -3,11 +3,11 @@
   "extends": ["config:recommended"],
   "enabledManagers": ["dockerfile"],
   "dockerfile": {
-    "schedule": ["before 3pm on friday"],
     "enabled": true,
     "baseBranches": ["main", "test-1"],
     "packageRules": [
       {
+        "schedule": ["before 3pm on friday"],
         "matchFileNames": ["*Dockerfile.konflux*"],
         "matchUpdateTypes": ["digest"],
         "enabled": true,
