@@ -2,11 +2,12 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
   "enabledManagers": ["dockerfile", "tekton"],
-  "baseBranches": ["main"],
+  "baseBranches": ["main", "test-1"],
   "dockerfile": {
     "enabled": true,
     "packageRules": [
       {
+        "matchBaseBranches": ["main"],
         "schedule": ["at any time"],
         "matchFileNames": ["*Dockerfile.konflux*"],
         "matchUpdateTypes": ["digest"],
@@ -30,6 +31,7 @@
   "automerge": true,
     "packageRules": [
       {
+        "matchBaseBranches": ["test-1"],
         "schedule": ["at any time"],
         "matchUpdateTypes": ["major", "minor", "pin", "pinDigest", "patch", "bump"],
         "enabled": false
