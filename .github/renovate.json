@@ -4,12 +4,12 @@
     "config:recommended"
   ],
   "branchPrefix": "renovate/",
-  "baseBranches": ["main", "test-1"],
   "ignoreTests": true,
   "automergeType": "pr",
   "automerge": true,
   "enabledManagers": ["dockerfile", "tekton"],
   "dockerfile": {
+    "baseBranches": ["main"],
     "matchBaseBranches": ["main"],
     "schedule": ["at any time"],
     "enabled": true,
@@ -51,6 +51,7 @@
           "^quay.io/redhat-appstudio-tekton-catalog/",
           "^quay.io/konflux-ci/tekton-catalog/"
         ],
+        "baseBranches": ["test-1"],
         "matchBaseBranches": ["test-1"],
         "schedule": ["at any time"],
         "matchUpdateTypes": ["digest"],
