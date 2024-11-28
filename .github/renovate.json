@@ -18,7 +18,7 @@
     {
       "matchManagers": ["dockerfile"],
       "matchBaseBranches": ["test-1"],
-      "enabled": false 
+      "enabled": false
     },
     {
       "matchManagers": ["tekton"],
@@ -43,8 +43,8 @@
     "ignorePaths": [
       "**/Dockerfile",
       "!**/Dockerfile.konflux"
-    ]
-    "pinDigests": true,
+    ],
+    "pinDigests": true
   },
   "tekton": {
     "enabled": true,
